@@ -1,9 +1,58 @@
-
 // Helper: безопасно получить первый элемент по классу (возвращает null, если не найдено)
 function getFirstByClass(name){
   var el = document.getElementsByClassName(name);
   return (el && el.length) ? el[0] : null;
 }
+
+// --- ЛОГИКА УПРАВЛЕНИЯ ПЕРЕХОДАМИ МЕЖДУ СТРАНИЦАМИ (для работы с CSS-стилем) ---
+
+var isVisible = true;
+var lastPage = null;
+
+// Функция для показа страницы с CSS-переходом
+var show = function(pageSelector, headerColor, bodyBackground) {
+    // 1. Снимаем блокировку прокрутки, если она была включена в начале
+    if (typeof scrollLock !== 'undefined' && scrollLock.disablePageScroll) {
+        scrollLock.enablePageScroll();
+    }
+    
+    // 2. Сдвигаем текущую страницу
+	if (isVisible) {
+		lastPage = $('.page.current');
+        // Если lastPage существует, сдвигаем его вправо
+        if (lastPage.length) {
+		    lastPage.css('left', '100%'); 
+		    lastPage.removeClass('current');
+        } else {
+            // Если .current не найдена, скрываем все страницы кроме целевой
+            $('.page').not(pageSelector).css('left', '100%').removeClass('current');
+        }
+	}
+	
+    // 3. Показываем новую страницу
+	$(pageSelector).css('left', '0'); 
+	$(pageSelector).addClass('current');
+	
+    // 4. Изменение стиля шапки и фона body
+	$('.header').css('background', headerColor);
+	$('body').css('background', bodyBackground);
+
+    // 5. Сбрасываем Swiper для главной страницы
+    if (pageSelector === '.papage' && typeof swiper !== 'undefined') {
+        swiper.slideTo(0, 10, false);
+    }
+	
+	isVisible = true;
+};
+
+// Логика кнопки "Назад"
+$('.arrow').on('click', function () {
+    // В данной имитации "Назад" возвращает на домашнюю страницу
+    $('.icon.doc').trigger('click'); 
+});
+
+// --- КОНЕЦ ЛОГИКИ УПРАВЛЕНИЯ ПЕРЕХОДАМИ ---
+
 
 scrollLock.disablePageScroll();
 
@@ -26,6 +75,7 @@ var arr = [
 
 $('.rf_title').text('Данi оновлено ' + date.getDate() + ' ' + arr[month-1] + ' ' + date.getFullYear() +' о ' + (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':' + '' + (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()));
 
+// Временный градиент при загрузке
 $('html').css('background', 'linear-gradient(90deg, #aabce8, #cfc6e5, #e2c6e6)');
 
 $.fn.preload = function() {
@@ -37,6 +87,7 @@ $.fn.preload = function() {
 $(['access/icons/docac.svg', 'access/icons/posin.svg', 'access/icons/posac.svg', 'access/icons/docin.svg', 'access/icons/notin.svg', 'access/icons/notac.svg', 'access/icons/menuin.svg', 'access/icons/menuac.svg', 'access/icons/qrcodeinc.png', 'access/icons/qrcodeact.png', 'access/icons/shtrihinc.png', 'access/icons/shtrihact.png','access/icons/1.svg','access/icons/2.svg','access/icons/3.svg','access/icons/4.svg',
 'access/icons/5.svg','access/icons/6.svg','access/icons/7.svg','access/icons/8.svg','access/icons/9.svg','access/icons/10.svg','access/icons/11.svg','access/icons/arrow.svg','access/e-Ukraine-Regular.woff']).preload();
 
+// --- ЛОГИКА ПЕРЕКЛЮЧЕНИЯ QR/ШТРИХ-КОДОВ (Оставляем как есть) ---
 $('.vshicon').on('click', function () {
   $('.loaded.sh.v').fadeIn(1);
   $('.loaded.qr.v').fadeOut(1);
@@ -76,68 +127,41 @@ $('.pqricon').on('click', function () {
   $('.loaded.qr.p').fadeIn(1);
   $('.loaded.sh.p').fadeOut(1);
 });
+// --- КОНЕЦ ЛОГИКИ QR/ШТРИХ-КОДОВ ---
+
+
+// --- ОБНОВЛЕННАЯ ЛОГИКА НАВИГАЦИИ ПО ФУТЕРУ (использует show()) ---
 
 $('.icon.pov').on('click', function () {
-	setTimeout(function () {
-		$('.icon').removeClass('act');
-		$('.icon.pov').addClass('act');
-
-		$('.papage').fadeOut(1);
-		$('.menulid').fadeOut(1);
-		$('.poslugi').fadeOut(1);
-
-		$('.notifications').fadeIn(1);
-
-    swiper.slideTo(0, 10, false);
+    $('.icon').removeClass('act');
+    $(this).addClass('act');
+    show('.notifications', '#C9D8E7', '#DEE8F1');
     $('html').css('background', '#c9d8e7');
-	}, 70);
 });
 
 $('.icon.doc').on('click', function () {
-	setTimeout(function () {
+    $('.icon').removeClass('act');
+    $(this).addClass('act');
+    // '.papage' - это главная страница с документами
+    show('.papage', '#C9D8E7', '#DEE8F1');
+    // Фон html установится swiper'ом, но для первого слайда нужен этот
     $('html').css('background', '#b0c7e7');
-
-		$('.icon').removeClass('act');
-		$('.icon.doc').addClass('act');
-
-		$('.notifications').fadeOut(1);
-		$('.menulid').fadeOut(1);
-		$('.poslugi').fadeOut(1);
-
-		$('.papage').fadeIn(1);
-	}, 70);
 });
 
 $('.icon.pos').on('click', function () {
-	setTimeout(function () {
-		$('.icon').removeClass('act');
-		$('.icon.pos').addClass('act');
-
-		$('.notifications').fadeOut(1);
-		$('.menulid').fadeOut(1);
-		$('.papage').fadeOut(1);
-		$('.poslugi').fadeIn(1);
-
-    swiper.slideTo(0, 10, false);
+    $('.icon').removeClass('act');
+    $(this).addClass('act');
+    show('.poslugi', '#C9D8E7', '#DEE8F1');
     $('html').css('background', '#c9d8e7');
-	}, 70);
 });
 
 $('.icon.men').on('click', function () {
-	setTimeout(function () {
-		$('.icon').removeClass('act');
-		$('.icon.men').addClass('act');
-
-		$('.notifications').fadeOut(1);
-		$('.poslugi').fadeOut(1);
-		$('.papage').fadeOut(1);
-
-		$('.menulid').fadeIn(1);
-
-    swiper.slideTo(0, 10, false);
+    $('.icon').removeClass('act');
+    $(this).addClass('act');
+    show('.menulid', '#C8D8E7', '#E9EFF5');
     $('html').css('background', '#c9d8e7');
-	}, 70);
 });
+// --- КОНЕЦ ОБНОВЛЕННОЙ ЛОГИКИ НАВИГАЦИИ ПО ФУТЕРУ ---
 
 
 $(function () {
@@ -309,8 +333,11 @@ setTimeout(function () {
 			$('.diyalogo').css('transform', 'scale(0)');
 			$('.zublogo').css('transform', 'translateX(-104px)');
 
+      // После загрузки, показываем главную страницу через новую функцию show()
+      // Это нужно, чтобы она получила класс .current и left: 0
+      $('.papage').addClass('page').removeClass('current').css('left', '100%').css('opacity', '1');
       $('.loginpage').fadeIn(1);
-  		$('.papage').css('opacity', '1');
+      $('.papage').css('opacity', '1');
 
 			setTimeout(function () {
 				var ves = ($('.papage > .footer').height() - $('.papage > .footer > .ft_icons').height()) / 2;
@@ -318,6 +345,9 @@ setTimeout(function () {
 				var zaz = ves + 13 + $('.papage > .footer > .ft_icons').height();
         $('.menu').css('max-height', 'calc(100% - ' + zaz + 'px)');
 				$('.ok').css('margin-bottom', (ves + 13) * 2 + 'px');
+
+                // Инициируем показ главной страницы, как если бы нажали на иконку "Документы"
+                $('.icon.doc').trigger('click');
 			}, 300);
 
 			setTimeout(function () {
@@ -333,6 +363,8 @@ setTimeout(function () {
 }, 700);
 $('.diyalogo').fadeIn(500);
 
+
+// --- ЛОГИКА ПОВОРОТА ДОКУМЕНТОВ (Оставляем как есть, использует anime.js) ---
 
 if($('.covid').length == 1){
   var j = 0
@@ -538,6 +570,8 @@ nlgi.addEventListener('click', function () {
 
 
 });
+// --- КОНЕЦ ЛОГИКИ ПОВОРОТА ДОКУМЕНТОВ ---
+
 
 var isWorking = true;
 if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
